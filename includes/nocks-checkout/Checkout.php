@@ -29,15 +29,14 @@ class Nocks_Checkout
 
     public function getMerchants() {
         try {
-        $response = $this->client->get('merchant');
-        $merchants = array('' => '== Please Select ==');
-        $jsonObj = json_decode($response);
-        foreach ($jsonObj->data as $merchant) {
-
-            foreach ($merchant->merchant_profiles->data as $profile) {
-                $merchants[$profile->uuid] = $merchant->name . " : " . $profile->name;
-            }
-        }
+	        $response = $this->client->get('merchant');
+	        $merchants = array('' => '== Please Select ==');
+	        $jsonObj = json_decode($response);
+	        foreach ($jsonObj->data as $merchant) {
+	            foreach ($merchant->merchant_profiles->data as $profile) {
+	                $merchants[$profile->uuid] = $merchant->name . " : " . $profile->name;
+	            }
+	        }
         } catch (\Exception $e) {
             $merchants[] = "== Error, no API key ==";
         }
