@@ -9,65 +9,92 @@ class Nocks_Checkout
     /* @var Nocks_RestClient $client */
     protected $client;
 
+    protected $merchantApiKey;
+
+    protected $testMode;
+
     // Merchant Profile
     protected $merchant_profile;
 
-    /* @var $apiEndpoint */
-    protected $apiEndpoint = "https://api.nocks.com/api/v2/";
-
-    /* @var $domain */
-    protected $domain = 'https://nocks.com/';
-
-    public function __construct($merchantApiKey, $merchantProfile) {
+    public function __construct($merchantApiKey, $merchantProfile, $testMode = null) {
         $this->merchant_profile = $merchantProfile;
-        $this->client = new Nocks_RestClient($this->apiEndpoint, $merchantApiKey);
+
+	    $settings = Nocks_WC_Plugin::getSettingsHelper();
+	    $this->testMode = $testMode === null ? $settings->isTestModeEnabled() : $testMode;
+
+	    $this->merchantApiKey = $merchantApiKey;
+		$endPoint = $this->testMode ? 'https://sandbox.nocks.com/api/v2/' : 'https://api.nocks.com/api/v2/';
+	    $this->client = new Nocks_RestClient($endPoint, $this->merchantApiKey);
+
         $curl_version = curl_version();
         $this->addVersionString("PHP/" . phpversion());
         $this->addVersionString("cURL/" . $curl_version["version"]);
         $this->addVersionString($curl_version["ssl_version"]);
     }
 
+	/**
+	 * @return array
+	 */
+    public function getTokenScopes() {
+	    $endPoint = $this->testMode ? 'https://sandbox.nocks.com/oauth/' : 'https://www.nocks.com/oauth/';
+
+	    $client = new Nocks_RestClient($endPoint, $this->merchantApiKey);
+
+	    try {
+		    $response = $client->get('token-scopes');
+
+		    return json_decode($response, true);
+	    } catch ( Nocks_WC_Exception_InvalidApiKey $e ) {
+	    	return [];
+	    }
+    }
+
+	/**
+	 * @return array
+	 */
     public function getMerchants() {
         try {
 	        $response = $this->client->get('merchant');
-	        $merchants = array('' => '== Please Select ==');
+	        $merchants = [];
 	        $jsonObj = json_decode($response);
 	        foreach ($jsonObj->data as $merchant) {
 	            foreach ($merchant->merchant_profiles->data as $profile) {
 	                $merchants[$profile->uuid] = $merchant->name . " : " . $profile->name;
 	            }
 	        }
+
+	        return $merchants;
         } catch (\Exception $e) {
-            $merchants[] = "== Error, no API key ==";
+            return [];
         }
-
-        return $merchants;
-    }
-
-    public function getPaymentUrl($payment_id) {
-        return $this->domain.'payment/url/'.$payment_id;
     }
 
     public function addVersionString($string) {
         $this->client->versionHeaders[] = $string;
     }
 
-    public function getCurrentRate($currencyCode) {
-        $rate = 0;
-        $response = $this->client->get('http://api.nocks.com/api/market?call=nlg');
-        $response = json_decode($response, true);
-        if (isset($response['last'])) {
-            $rate = number_format($response['last'], 8);
-        }
-
-        return str_replace(',', '', $rate);
-    }
+//    public function getCurrentRate($currencyCode) {
+//        $rate = 0;
+//        $response = $this->client->get('http://api.nocks.com/api/market?call=nlg');
+//        $response = json_decode($response, true);
+//        if (isset($response['last'])) {
+//            $rate = number_format($response['last'], 8);
+//        }
+//
+//        return str_replace(',', '', $rate);
+//    }
 
     public function round_up ( $value, $precision ) {
         $pow = pow ( 10, $precision );
         return ( ceil ( $pow * $value ) + ceil ( $pow * $value - ceil ( $pow * $value ) ) ) / $pow;
     }
 
+	/**
+	 * @param $data
+	 *
+	 * @return array|mixed|null|object
+	 * @throws Nocks_WC_Exception_InvalidApiKey
+	 */
     public function createTransaction($data) {
         $amount = $data['amount'];
         $currency = $data['currency'];
@@ -93,13 +120,7 @@ class Nocks_Checkout
         $response = ($this->client->post('transaction', null, $post));
         $transaction = json_decode($response, true);
 
-        if (isset($transaction['data']['payments']["data"][0]['uuid'])) {
-            return $transaction;
-
-        } else {
-            return false;
-        }
-
+        return $transaction;
     }
 
     public function getTransaction($uuid) {
@@ -115,7 +136,7 @@ class Nocks_Checkout
      * @param $target_currency
      * @param $amount
      * @param $source_currency
-     * @return array|int
+     * @return int
      */
     public function calculatePrice($target_currency, $amount, $source_currency) {
         $data = array(
@@ -129,14 +150,18 @@ class Nocks_Checkout
             'payment_method'   => array("method" => "gulden")
         );
 
-        $price = $this->client->post('transaction/quote', null, $data);
-        $price = json_decode($price, true);
+        try {
+	        $price = $this->client->post('transaction/quote', null, $data);
+	        $price = json_decode($price, true);
 
-        if (isset($price['data']) && isset($price['data'])) {
-            return $price['data'];
+	        if (isset($price['data']) && isset($price['data'])) {
+		        return $price['data'];
+	        }
+
+	        return 0;
+        } catch ( Nocks_WC_Exception_InvalidApiKey $e ) {
+        	return 0;
         }
-
-        return 0;
     }
 
 }

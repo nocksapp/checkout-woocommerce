@@ -2,13 +2,13 @@
 /**
  * Plugin Name: Nocks Checkout for WooCommerce
  * Description: Accept payments in WooCommerce with the official Nocks Checkout plugin
- * Version: 0.12.0
+ * Version: 0.13.0
  * Author: Nocks
  * Author URI: https://www.nocks.com
  * Requires at least: 3.8
  * Tested up to: 4.8.2
  * Text Domain: nocks-checkout-for-woocommerce
- * Domain Path: /i18n/languages/
+ * Domain Path: /languages
  * License: GPLv2 or later
  * WC requires at least: 2.1.0
  * WC tested up to: 3.2.0
@@ -119,8 +119,7 @@ add_action('init', 'nocks_wc_plugin_init');
  */
 function nocks_add_plugin_textdomain() {
 
-	load_plugin_textdomain( 'nocks-checkout-for-woocommerce', false, NOCKS_PLUGIN_DIR . 'i18n/languages/' );
-
+	load_plugin_textdomain( 'nocks-checkout-for-woocommerce', false, 'nocks-checkout-for-woocommerce/languages');
 }
 
 add_action( 'plugins_loaded', 'nocks_add_plugin_textdomain' );
