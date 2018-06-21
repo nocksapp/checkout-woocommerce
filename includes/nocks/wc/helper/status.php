@@ -97,9 +97,6 @@ class Nocks_WC_Helper_Status
      * @throws Nocks_WC_Exception_CouldNotConnectToNocks
      */
     public function getNocksMerchants() {
-        // Is test mode enabled?
-        $test_mode = Nocks_WC_Plugin::getSettingsHelper()->isTestModeEnabled();
-
         $api_helper = Nocks_WC_Plugin::getApiHelper();
         $api_client = $api_helper->getApiClient();
 

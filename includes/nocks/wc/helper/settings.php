@@ -76,13 +76,11 @@ class Nocks_WC_Helper_Settings
      * @throws Nocks_WC_Exception_CouldNotConnectToNocks
      */
     public function getNocksMerchants() {
-        $this->merchant_accounts = array('= Please enter your API key =');
         try {
             $api_helper = Nocks_WC_Plugin::getApiHelper();
             $api_client = $api_helper->getApiClient();
 
             // Try to load Nocks Merchant Accounts
-
             $this->merchant_accounts = $api_client->getMerchants();
 
             return $this->merchant_accounts;
@@ -96,6 +94,12 @@ class Nocks_WC_Helper_Settings
      * @return array
      */
     public function addGlobalSettingsFields(array $settings) {
+    	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    		// Refresh at POST
+		    header("Refresh:0");
+		    exit;
+	    }
+
         $content = '' . $this->getPluginStatus() . $this->getNocksMethods();
 
         /* translators: Default payment description. {order_number} and {order_date} are available tags. */
@@ -124,14 +128,21 @@ class Nocks_WC_Helper_Settings
                 'type'  => 'title',
                 'desc'  => '<p id="' . Nocks_WC_Plugin::PLUGIN_ID . '">' . $content . '</p>' . '<p>' . __('The following options are required to use the plugin and are used by all Nocks payment methods', 'nocks-checkout-for-woocommerce') . '</p>',
             ),
+	        array(
+		        'id'       => $this->getSettingId('test_mode_enabled'),
+		        'title'    => __('Enable test mode', 'nocks-checkout-for-woocommerce'),
+		        'default'  => 'no',
+		        'type'     => 'checkbox',
+		        'desc_tip' => __('Enable test mode if you want to test the plugin without using real payments. (Sandbox API key required)', 'nocks-checkout-for-woocommerce'),
+	        ),
             array(
                 'id'          => $this->getSettingId('live_api_key'),
                 'title'       => __('API key', 'nocks-checkout-for-woocommerce'),
                 'default'     => '',
                 'type'        => 'textarea',
                 'desc'        => __('Please enter your <a target="_blank" href="https://www.nocks.com/account/api/personal-tokens">Nocks API key</a> to select a merchant account. No API-key? Create one <a target="_blank" href="https://www.nocks.com/account/api/personal-tokens">here</a> and provide the following permissions: <br/><strong>transaction.create, transaction.read and merchant.read</strong>', 'nocks-checkout-for-woocommerce'),
-                'css'         => 'width: 350px',
-                'placeholder' => __('Please paste your Nocks API Key here and save first.', 'nocks-checkout-for-woocommerce'),
+                'css'         => 'height: 200px; width: 100%;',
+                'placeholder' => __('Please paste your Nocks API Key here', 'nocks-checkout-for-woocommerce'),
             ),
             array(
                 'id'          => $this->getSettingId('merchant_account'),
@@ -140,14 +151,6 @@ class Nocks_WC_Helper_Settings
                 'description' => __('Please select a merchant account.', 'nocks-checkout-for-woocommerce'),
                 'default'     => '',
                 'options' => $settings_helper->getNocksMerchants(),
-
-            ),
-            array(
-                'id'       => $this->getSettingId('test_mode_enabled'),
-                'title'    => __('Enable test mode', 'nocks-checkout-for-woocommerce'),
-                'default'  => 'no',
-                'type'     => 'checkbox',
-                'desc_tip' => __('Enable test mode if you want to test the plugin without using real payments.', 'nocks-checkout-for-woocommerce'),
             ),
             array(
                 'id'      => $this->getSettingId('payment_description'),

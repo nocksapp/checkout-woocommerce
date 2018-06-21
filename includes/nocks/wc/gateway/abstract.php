@@ -87,26 +87,26 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
                 'label'       => sprintf(__('Enable %s', 'nocks-checkout-for-woocommerce'), $this->getDefaultTitle()),
                 'default'     => 'yes'
             ),
-            'title' => array(
-                'title'       => __('Title', 'nocks-checkout-for-woocommerce'),
-                'type'        => 'text',
-                'description' => sprintf(__('This controls the title which the user sees during checkout. Default <code>%s</code>', 'nocks-checkout-for-woocommerce'), $this->getDefaultTitle()),
-                'default'     => $this->getDefaultTitle(),
-                'desc_tip'    => true,
-            ),
+//            'title' => array(
+//                'title'       => __('Title', 'nocks-checkout-for-woocommerce'),
+//                'type'        => 'text',
+//                'description' => sprintf(__('This controls the title which the user sees during checkout. Default <code>%s</code>', 'nocks-checkout-for-woocommerce'), $this->getDefaultTitle()),
+//                'default'     => $this->getDefaultTitle(),
+//                'desc_tip'    => true,
+//            ),
             'display_logo' => array(
                 'title'       => __('Display logo', 'nocks-checkout-for-woocommerce'),
                 'type'        => 'checkbox',
                 'label'       => __('Display logo on checkout page. Default <code>enabled</code>', 'nocks-checkout-for-woocommerce'),
                 'default'     => 'yes'
             ),
-            'description' => array(
-                'title'       => __('Description', 'nocks-checkout-for-woocommerce'),
-                'type'        => 'textarea',
-                'description' => sprintf(__('Payment method description that the customer will see on your checkout. Default <code>%s</code>', 'nocks-checkout-for-woocommerce'), $this->getDefaultDescription()),
-                'default'     => $this->getDefaultDescription(),
-                'desc_tip'    => true,
-            ),
+//            'description' => array(
+//                'title'       => __('Description', 'nocks-checkout-for-woocommerce'),
+//                'type'        => 'textarea',
+//                'description' => sprintf(__('Payment method description that the customer will see on your checkout. Default <code>%s</code>', 'nocks-checkout-for-woocommerce'), $this->getDefaultDescription()),
+//                'default'     => $this->getDefaultDescription(),
+//                'desc_tip'    => true,
+//            ),
         );
     }
 
@@ -136,9 +136,7 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 
     protected function _initDescription ()
     {
-        $description = $this->get_option('description', '');
-
-        $this->description = $description;
+        $this->description = $this->getDefaultDescription();
     }
 
     protected function _initMinMaxAmount ()
@@ -261,7 +259,6 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
         $settings_helper     = Nocks_WC_Plugin::getSettingsHelper();
 
         // Is test mode enabled?
-        $test_mode          = $settings_helper->isTestModeEnabled();
         $paymentRequestData = $this->getPaymentRequestData($order);
 
         $data = array_filter($paymentRequestData);
@@ -278,12 +275,12 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 
             do_action(Nocks_WC_Plugin::PLUGIN_ID . '_create_payment', $data, $order);
 
-            $payment = Nocks_WC_Plugin::getApiHelper()->getApiClient()->createTransaction($data);
+	        $transaction = Nocks_WC_Plugin::getApiHelper()->getApiClient()->createTransaction($data);
 
-            if(isset($payment['data']) && $payment['status'] == 201 && isset($payment['data']['uuid']))
+            if(isset($transaction['data']) && $transaction['status'] == 201 && isset($transaction['data']['uuid']))
             {
-                $transaction_id = $payment['data']['uuid'];//$nocks_checkout_transaction['success']['transactionId'];
-                $payment_id = $payment['data']['payments']["data"][0]['uuid'];
+                $transaction_id = $transaction['data']['uuid'];//$nocks_checkout_transaction['success']['transactionId'];
+                $payment_id = $transaction['data']['payments']["data"][0]['uuid'];
 
                 $order->update_status('pending', 'Nocks Checkout transaction ID created: '.$transaction_id);
                 update_post_meta( $order_id, 'nocks_transaction_id', $transaction_id);
@@ -309,15 +306,9 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
                 $payment_id
             ));
 
-	        if ( version_compare( WC_VERSION, '3.0', '<' ) ) {
-		        Nocks_WC_Plugin::debug( "For order " . $order->id . " redirect user to payment URL: {".Nocks_WC_Plugin::getApiHelper()->getApiClient()->getPaymentUrl($payment_id)."}" );
-	        } else {
-		        Nocks_WC_Plugin::debug( "For order " . $order->get_id() . " redirect user to payment URL: {".Nocks_WC_Plugin::getApiHelper()->getApiClient()->getPaymentUrl($payment_id)."}" );
-	        }
-
             return array(
                 'result'   => 'success',
-                'redirect' => $this->getProcessPaymentRedirect($order, $payment_id),
+                'redirect' => $transaction['data']['payments']['data'][0]['metadata']['url'],
             );
         }
         catch (Nocks_Exception $e)
@@ -447,23 +438,6 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 	    $order_customer_id = ( version_compare( WC_VERSION, '3.0', '<' ) ) ? $order->customer_user : $order->get_customer_id();
 
 	    return  Nocks_WC_Plugin::getDataHelper()->getUserNocksCustomerId($order_customer_id, $test_mode);
-    }
-
-    /**
-     * Redirect location after successfully completing process_payment
-     *
-     * @param WC_Order $order
-     * @param $payment_id
-     *
-     * @return string
-     */
-    protected function getProcessPaymentRedirect(WC_Order $order, $payment_id)
-    {
-        $api_helper = Nocks_WC_Plugin::getApiHelper();
-        /*
-         * Redirect to payment URL
-         */
-        return $api_helper->getApiClient()->getPaymentUrl($payment_id);
     }
 
     /**
@@ -979,7 +953,7 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
     {
         $site_url   = get_site_url();
 
-        $return_url = WC()->api_request_url('nocks_return');
+	    $return_url = WC()->api_request_url('nocks_return');
 
 	    if ( version_compare( WC_VERSION, '3.0', '<' ) ) {
 		    $return_url = add_query_arg(array(

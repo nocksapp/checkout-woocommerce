@@ -1,0 +1,20 @@
+msgid "Gulden"
+msgstr "Gulden"
+
+msgid "Pay with Gulden"
+msgstr "Pay with Gulden"
+
+msgid "Estimated total amount of Gulden: "
+msgstr "Estimated total amount of Gulden: "
+
+msgid "We cannot calculate the amount of Guldens at this moment."
+msgstr "We cannot calculate the amount of Guldens at this moment."
+
+msgid "Your payment has been cancelled."
+msgstr "Your payment has been cancelled."
+
+msgid "We have not received a definite payment status. You will receive an email as soon as we receive a confirmation of the bank/merchant."
+msgstr "We have not received a definite payment status. You will receive an email as soon as we receive a confirmation of the bank/merchant."
+
+msgid "Payment completed with <strong>%s</strong>"
+msgstr "Payment completed with <strong>%s</strong>"

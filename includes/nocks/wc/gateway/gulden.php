@@ -59,10 +59,10 @@ class Nocks_WC_Gateway_Gulden extends Nocks_WC_Gateway_Abstract
 		        $amount    = $priceData['source_amount']['amount'];
 	        }
 
-	        $html = '<br/>Estimated total amount of Gulden: <i class="guldensign"></i>'.($amount).'';
+	        $html = '<br/>' . __('Estimated total amount of Gulden: ', 'nocks-checkout-for-woocommerce') . '<i class="guldensign"></i>'.($amount).'';
         } catch(Exception $e) {
             $exception = json_decode($e->getMessage());
-            $html = '<br/>We cannot calculate the amount of Guldens at this moment.';
+            $html = '<br/>' . __('We cannot calculate the amount of Guldens at this moment.', 'nocks-checkout-for-woocommerce');
         }
 
 

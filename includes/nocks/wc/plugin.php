@@ -149,12 +149,30 @@ class Nocks_WC_Plugin
 		// Listen to return URL call
 		add_action( 'woocommerce_api_nocks_return', array ( __CLASS__, 'onNocksReturn' ) );
 
+		// Ajax get merchants
+		add_action( 'woocommerce_api_ajax_merchants', array ( __CLASS__, 'ajaxMerchants' ) );
+		add_action( 'woocommerce_api_ajax_validate_access_token', array ( __CLASS__, 'ajaxValidateAccessToken' ) );
+
 		// On order details
 		add_action( 'woocommerce_order_details_after_order_table', array ( __CLASS__, 'onOrderDetails' ), 10, 1 );
+
+		add_action('admin_enqueue_scripts', array ( __CLASS__, 'nocksCheckoutAdminScript' ) );
 
 		self::initDb();
 		// Mark plugin initiated
 		self::$initiated = true;
+	}
+
+	public static function nocksCheckoutAdminScript() {
+		wp_register_script( 'nocks_checkout_admin_script', plugins_url('assets/js/admin.js', dirname(__FILE__)));
+		wp_localize_script( 'nocks_checkout_admin_script', 'nocksAdminVars', [
+			'merchantsUrl' => WC()->api_request_url('ajax_merchants'),
+			'validateAccessTokenUrl' =>  WC()->api_request_url('ajax_validate_access_token'),
+			'loadingMerchantsText' => __('Loading merchants', 'nocks-checkout-for-woocommerce'),
+			'noMerchantsFoundText' => __('No merchants found', 'nocks-checkout-for-woocommerce'),
+			'invalidAccessToken' => __('Invalid access token', 'nocks-checkout-for-woocommerce'),
+		]);
+		wp_enqueue_script( 'nocks_checkout_admin_script');
 	}
 
     /**
@@ -205,6 +223,35 @@ class Nocks_WC_Plugin
         self::debug(__METHOD__ . ": Redirect url on return order " . $gateway->id . ", order $order_id: $redirect_url");
 
         wp_safe_redirect($redirect_url);
+    }
+
+    public static function ajaxMerchants() {
+	    $client = new Nocks_Checkout($_POST['accessToken'], null, $_POST['testMode'] === '1');
+	    $merchants = $client->getMerchants();
+
+	    $options = [];
+	    foreach ($merchants as $key => $label) {
+	    	$options[] = ['value' => $key, 'label' => $label];
+	    }
+
+	    $return = ['merchants'  => $options];
+
+	    wp_send_json($return);
+    }
+
+    public static function ajaxValidateAccessToken() {
+	    $requiredScopes = ['merchant.read', 'transaction.create', 'transaction.read'];
+
+	    $client = new Nocks_Checkout($_POST['accessToken'], null, $_POST['testMode'] === '1');
+	    $scopes = $client->getTokenScopes();
+
+	    $requiredAccessTokenScopes = array_filter($scopes, function($scope) use ($requiredScopes) {
+		    return in_array($scope['id'], $requiredScopes);
+	    });
+
+	    $return = ['valid'  => sizeof($requiredAccessTokenScopes) === sizeof($requiredScopes)];
+
+	    wp_send_json($return);
     }
 
     /**
