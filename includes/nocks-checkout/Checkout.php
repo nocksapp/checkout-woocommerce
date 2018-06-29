@@ -23,13 +23,16 @@ class Nocks_Checkout
 	    $this->testMode = $testMode === null ? $settings->isTestModeEnabled() : $testMode;
 
 	    $this->merchantApiKey = $merchantApiKey;
-		$endPoint = $this->testMode ? 'https://sandbox.nocks.com/api/v2/' : 'https://api.nocks.com/api/v2/';
-	    $this->client = new Nocks_RestClient($endPoint, $this->merchantApiKey);
+	    $this->client = new Nocks_RestClient(self::getEndpoint($this->testMode), $this->merchantApiKey);
 
         $curl_version = curl_version();
         $this->addVersionString("PHP/" . phpversion());
         $this->addVersionString("cURL/" . $curl_version["version"]);
         $this->addVersionString($curl_version["ssl_version"]);
+    }
+
+    public static function getEndpoint($testMode = false) {
+	    return $testMode ? 'https://sandbox.nocks.com/api/v2/' : 'https://api.nocks.com/api/v2/';
     }
 
 	/**
@@ -50,11 +53,20 @@ class Nocks_Checkout
     }
 
 	/**
+	 * @param null $apiKey
+	 * @param null $testMode
+	 *
 	 * @return array
 	 */
-    public function getMerchants() {
+    public function getMerchants($apiKey = null, $testMode = null) {
         try {
-	        $response = $this->client->get('merchant');
+        	if ($apiKey !== null && $testMode !== null) {
+        		$client = new Nocks_RestClient(self::getEndpoint($testMode), $apiKey);
+	        } else {
+        		$client = $this->client;
+	        }
+
+	        $response = $client->get('merchant');
 	        $merchants = [];
 	        $jsonObj = json_decode($response);
 	        foreach ($jsonObj->data as $merchant) {

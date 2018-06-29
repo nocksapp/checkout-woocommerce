@@ -5,11 +5,11 @@ $j(document).ready(function() {
     var accessTokenTimeout = null;
 
     var $merchantSelect = $j('#nocks-checkout-for-woocommerce_merchant_account');
-    $merchantSelect.prop('required',true);
+    // $merchantSelect.prop('required',true);
     $merchantSelect.before('<p id="payment_nockspaymentgateway_merchants_message" style="display: none; color: red"></p>');
 
     var $accessTokenInput = $j('#nocks-checkout-for-woocommerce_live_api_key');
-    $accessTokenInput.prop('required', true);
+    // $accessTokenInput.prop('required', true);
     $accessTokenInput.before('<p id="payment_nockspaymentgateway_accesstoken_message" style="display: none; color: red">' + nocksAdminVars.invalidAccessToken + '</p>');
 
     if ($merchantSelect.find('option').length === 0) {
@@ -70,7 +70,6 @@ $j(document).ready(function() {
                     testMode: testmode ? '1' : '0'
                 }
             }).done(function(data) {
-                console.log(data);
                 if (data.valid) {
                     $j('#payment_nockspaymentgateway_accesstoken_message').hide();
                 } else {
