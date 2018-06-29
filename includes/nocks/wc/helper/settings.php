@@ -72,16 +72,20 @@ class Nocks_WC_Helper_Settings
         return admin_url('admin.php?page=wc-status&tab=logs');
     }
 
-    /**
-     * @throws Nocks_WC_Exception_CouldNotConnectToNocks
-     */
-    public function getNocksMerchants() {
+	/**
+	 * @param null $apiKey
+	 * @param null $testMode
+	 *
+	 * @return array
+	 * @throws Nocks_WC_Exception_CouldNotConnectToNocks
+	 */
+    public function getNocksMerchants($apiKey = null, $testMode = null) {
         try {
             $api_helper = Nocks_WC_Plugin::getApiHelper();
             $api_client = $api_helper->getApiClient();
 
             // Try to load Nocks Merchant Accounts
-            $this->merchant_accounts = $api_client->getMerchants();
+            $this->merchant_accounts = $api_client->getMerchants($apiKey, $testMode);
 
             return $this->merchant_accounts;
         } catch (Nocks_Exception $e) {
@@ -94,12 +98,6 @@ class Nocks_WC_Helper_Settings
      * @return array
      */
     public function addGlobalSettingsFields(array $settings) {
-    	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    		// Refresh at POST
-		    header("Refresh:0");
-		    exit;
-	    }
-
         $content = '' . $this->getPluginStatus() . $this->getNocksMethods();
 
         /* translators: Default payment description. {order_number} and {order_date} are available tags. */
@@ -119,6 +117,9 @@ class Nocks_WC_Helper_Settings
         }
 
         $settings_helper = Nocks_WC_Plugin::getSettingsHelper();
+//
+//        var_dump($_POST);
+//        die(var_dump($settings));
 
         // Global Nocks settings
         $nocks_settings = array(
@@ -150,7 +151,7 @@ class Nocks_WC_Helper_Settings
                 'type'        => 'select',
                 'description' => __('Please select a merchant account.', 'nocks-checkout-for-woocommerce'),
                 'default'     => '',
-                'options' => $settings_helper->getNocksMerchants(),
+                'options' => $settings_helper->getNocksMerchants(isset($_POST['nocks-checkout-for-woocommerce_live_api_key']) ? $_POST['nocks-checkout-for-woocommerce_live_api_key'] : null, $_SERVER['REQUEST_METHOD'] === 'POST' ? isset($_POST['nocks-checkout-for-woocommerce_test_mode_enabled']) : null),
             ),
             array(
                 'id'      => $this->getSettingId('payment_description'),

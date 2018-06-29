@@ -309,16 +309,19 @@ class Nocks_WC_Plugin
      */
     public static function addGateways (array $gateways)
     {
-        foreach (glob(dirname(__FILE__)."/gateway/*") as $gateway) {
-            $gateway = pathinfo($gateway, PATHINFO_FILENAME);
-            if ($gateway === 'abstract')
-                continue;
-            $gateway = 'Nocks_WC_Gateway_'.ucfirst($gateway);;
-            $gateways[] = $gateway;
-            self::$GATEWAYS[] = $gateway;
-        }
-        return $gateways;
+    	if (empty(self::$GATEWAYS)) {
+		    foreach (glob(dirname(__FILE__)."/gateway/*") as $gateway) {
+			    $gateway = pathinfo($gateway, PATHINFO_FILENAME);
+			    if ($gateway === 'abstract')
+				    continue;
+			    $gateway = 'Nocks_WC_Gateway_'.ucfirst($gateway);;
+			    $gateways[] = $gateway;
+			    self::$GATEWAYS[] = $gateway;
+		    }
+		    return $gateways;
+	    }
 
+	    return self::$GATEWAYS;
     }
 
     /**
