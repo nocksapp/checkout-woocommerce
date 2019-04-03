@@ -4,6 +4,27 @@ msgstr ""
 msgid "Pay with Gulden"
 msgstr ""
 
+msgid "iDEAL"
+msgstr ""
+
+msgid "Pay with iDEAL"
+msgstr ""
+
+msgid "Select your bank"
+msgstr ""
+
+msgid "SEPA"
+msgstr ""
+
+msgid "Pay with SEPA"
+msgstr ""
+
+msgid "Nocks Balance"
+msgstr ""
+
+msgid "Pay with Nocks Balance"
+msgstr ""
+
 msgid "Estimated total amount of Gulden: "
 msgstr ""
 

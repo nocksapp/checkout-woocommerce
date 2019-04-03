@@ -3,7 +3,8 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 {
     const STATUS_PENDING    = 'pending';
     const STATUS_PROCESSING = 'processing';
-    const STATUS_COMPLETED  = 'completed';
+	const STATUS_ON_HOLD    = 'on-hold';
+	const STATUS_COMPLETED  = 'completed';
     const STATUS_CANCELLED  = 'cancelled';
     const STATUS_FAILED     = 'failed';
 
@@ -87,26 +88,26 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
                 'label'       => sprintf(__('Enable %s', 'nocks-checkout-for-woocommerce'), $this->getDefaultTitle()),
                 'default'     => 'yes'
             ),
-//            'title' => array(
-//                'title'       => __('Title', 'nocks-checkout-for-woocommerce'),
-//                'type'        => 'text',
-//                'description' => sprintf(__('This controls the title which the user sees during checkout. Default <code>%s</code>', 'nocks-checkout-for-woocommerce'), $this->getDefaultTitle()),
-//                'default'     => $this->getDefaultTitle(),
-//                'desc_tip'    => true,
-//            ),
+            'title' => array(
+                'title'       => __('Title', 'nocks-checkout-for-woocommerce'),
+                'type'        => 'text',
+                'description' => sprintf(__('This controls the title which the user sees during checkout. Default <code>%s</code>', 'nocks-checkout-for-woocommerce'), $this->getDefaultTitle()),
+                'default'     => $this->getDefaultTitle(),
+                'desc_tip'    => true,
+            ),
             'display_logo' => array(
                 'title'       => __('Display logo', 'nocks-checkout-for-woocommerce'),
                 'type'        => 'checkbox',
                 'label'       => __('Display logo on checkout page. Default <code>enabled</code>', 'nocks-checkout-for-woocommerce'),
                 'default'     => 'yes'
             ),
-//            'description' => array(
-//                'title'       => __('Description', 'nocks-checkout-for-woocommerce'),
-//                'type'        => 'textarea',
-//                'description' => sprintf(__('Payment method description that the customer will see on your checkout. Default <code>%s</code>', 'nocks-checkout-for-woocommerce'), $this->getDefaultDescription()),
-//                'default'     => $this->getDefaultDescription(),
-//                'desc_tip'    => true,
-//            ),
+            'description' => array(
+                'title'       => __('Description', 'nocks-checkout-for-woocommerce'),
+                'type'        => 'textarea',
+                'description' => sprintf(__('Payment method description that the customer will see on your checkout. Default <code>%s</code>', 'nocks-checkout-for-woocommerce'), $this->getDefaultDescription()),
+                'default'     => $this->getDefaultDescription(),
+                'desc_tip'    => true,
+            ),
         );
     }
 
@@ -248,7 +249,7 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
             return array('result' => 'failure');
         }
 
-        $initial_order_status = self::STATUS_PENDING;
+	    $initial_order_status = $this->getInitialOrderStatus();
 
         // Overwrite plugin-wide
         $initial_order_status = apply_filters(Nocks_WC_Plugin::PLUGIN_ID . '_initial_order_status', $initial_order_status);
@@ -282,7 +283,7 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
                 $transaction_id = $transaction['data']['uuid'];//$nocks_checkout_transaction['success']['transactionId'];
                 $payment_id = $transaction['data']['payments']["data"][0]['uuid'];
 
-                $order->update_status('pending', 'Nocks Checkout transaction ID created: '.$transaction_id);
+                $this->updateOrderStatus($order, $initial_order_status, 'Nocks Checkout transaction ID created: '.$transaction_id);
                 update_post_meta( $order_id, 'nocks_transaction_id', $transaction_id);
                 update_post_meta( $order_id, 'nocks_payment_id', $payment_id);
             } else {
@@ -359,6 +360,7 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
         $settings_helper     = Nocks_WC_Plugin::getSettingsHelper();
         $payment_description = $settings_helper->getPaymentDescription();
         $nocks_method       = $this->getNocksMethodId();
+        $source_currency    = $this->getSourceCurrency();
         $selected_issuer     = $this->getSelectedIssuer();
         $return_url          = $this->getReturnUrl($order);
         $webhook_url         = $this->getWebhookUrl($order);
@@ -383,6 +385,7 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 			    'redirectUrl'     => $return_url,
 			    'webhookUrl'      => $webhook_url,
 			    'method'          => $nocks_method,
+			    'source_currency' => $source_currency,
 			    'issuer'          => $selected_issuer,
 			    'billingAddress'  => $order->billing_address_1,
 			    'billingCity'     => $order->billing_city,
@@ -406,6 +409,7 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 			    'redirectUrl'     => $return_url,
 			    'webhookUrl'      => $webhook_url,
 			    'method'          => $nocks_method,
+			    'source_currency' => $source_currency,
 			    'issuer'          => $selected_issuer,
 			    'billingAddress'  => $order->get_billing_address_1(),
 			    'billingCity'     => $order->get_billing_city(),
@@ -440,11 +444,11 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 	    return  Nocks_WC_Plugin::getDataHelper()->getUserNocksCustomerId($order_customer_id, $test_mode);
     }
 
-    /**
-     * @param WC_Order $order
-     * @param string $new_status
-     * @param string $note
-     */
+	/**
+	 * @param WC_Order $order
+	 * @param string $new_status
+	 * @param string $note
+	 */
     public function updateOrderStatus (WC_Order $order, $new_status, $note = '')
     {
         $order->update_status($new_status, $note);
@@ -453,6 +457,16 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 
 		    switch ($new_status)
 		    {
+			    case self::STATUS_ON_HOLD:
+				    if (!get_post_meta($order->id, '_order_stock_reduced', $single = true)) {
+					    // Reduce order stock
+					    $order->reduce_order_stock();
+
+					    Nocks_WC_Plugin::debug(__METHOD__ . " Stock for order {$order->id} reduced.");
+				    }
+
+				    break;
+
 			    case self::STATUS_FAILED:
 			    case self::STATUS_CANCELLED:
 				    if (get_post_meta($order->id, '_order_stock_reduced', $single = true))
@@ -470,10 +484,21 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 
 		    switch ($new_status)
 		    {
+			    case self::STATUS_ON_HOLD:
+
+				    if (!$order->get_meta( '_order_stock_reduced', true)) {
+					    // Reduce order stock
+					    wc_reduce_stock_levels($order->get_id());
+
+					    Nocks_WC_Plugin::debug(__METHOD__ . " Stock for order {$order->get_id()} reduced.");
+				    }
+
+				    break;
+
 			    case self::STATUS_PENDING:
 			    case self::STATUS_FAILED:
 			    case self::STATUS_CANCELLED:
-				    if ( $order->get_meta( '_order_stock_reduced', true ) )
+				    if ($order->get_meta( '_order_stock_reduced', true ))
 				    {
 					    // Restore order stock
 					    Nocks_WC_Plugin::getDataHelper()->restoreOrderStock($order);
@@ -921,6 +946,11 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
             return true;
         }
 
+	    // Has initial order status 'on-hold'
+	    if ($this->getInitialOrderStatus() === self::STATUS_ON_HOLD && Nocks_WC_Plugin::getDataHelper()->hasOrderStatus( $order, self::STATUS_ON_HOLD)) {
+		    return true;
+	    }
+
         return false;
     }
 
@@ -1048,7 +1078,7 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
      */
     protected function getSupportedCurrencies ()
     {
-        $default = array('EUR', 'USD', 'NLG');
+        $default = array('EUR', 'NLG');
 
         return apply_filters('woocommerce_' . $this->id . '_supported_currencies', $default);
     }
@@ -1076,6 +1106,18 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
      * @return mixed
      */
     abstract public function getNocksMethodId ();
+
+	/**
+	 * @return string
+	 */
+	public function getSourceCurrency() {
+		return null;
+	}
+
+	public function getInitialOrderStatus()
+	{
+		return self::STATUS_PENDING;
+	}
 
     /**
      * @return string

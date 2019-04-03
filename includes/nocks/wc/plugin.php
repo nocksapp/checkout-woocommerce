@@ -314,10 +314,11 @@ class Nocks_WC_Plugin
 			    $gateway = pathinfo($gateway, PATHINFO_FILENAME);
 			    if ($gateway === 'abstract')
 				    continue;
-			    $gateway = 'Nocks_WC_Gateway_'.ucfirst($gateway);;
+			    $gateway = 'Nocks_WC_Gateway_'.ucfirst($gateway);
 			    $gateways[] = $gateway;
 			    self::$GATEWAYS[] = $gateway;
 		    }
+
 		    return $gateways;
 	    }
 
