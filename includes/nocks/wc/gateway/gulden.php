@@ -1,16 +1,6 @@
 <?php
 class Nocks_WC_Gateway_Gulden extends Nocks_WC_Gateway_Abstract
 {
-
-    /**
-     *
-     */
-    public function __construct ()
-    {
-        $this->has_fields = TRUE;
-        parent::__construct();
-    }
-
     /**
      * @return string
      */
@@ -18,6 +8,11 @@ class Nocks_WC_Gateway_Gulden extends Nocks_WC_Gateway_Abstract
     {
         return 'gulden';
     }
+
+	public function getSourceCurrency()
+	{
+		return 'NLG';
+	}
 
     /**
      * @return string
@@ -30,8 +25,9 @@ class Nocks_WC_Gateway_Gulden extends Nocks_WC_Gateway_Abstract
 	/**
 	 * @return string
 	 */
-	protected function getSettingsDescription() {
-		return '';
+	protected function getSettingsDescription()
+	{
+		return __('Accept Gulden payments with Nocks', 'nocks-checkout-for-woocommerce');
 	}
 
     /**
@@ -48,7 +44,7 @@ class Nocks_WC_Gateway_Gulden extends Nocks_WC_Gateway_Abstract
      */
     public function payment_fields() {
         // Display description above issuers
-        wp_enqueue_style( 'nocks_checkout_add_currency_css_nlg', plugins_url('assets/guldensign/guldensign.css', dirname(__FILE__)));
+        // wp_enqueue_style( 'nocks_checkout_add_currency_css_nlg', plugins_url('assets/guldensign/guldensign.css', dirname(__FILE__)));
 
         parent::payment_fields();
         try {
@@ -61,7 +57,6 @@ class Nocks_WC_Gateway_Gulden extends Nocks_WC_Gateway_Abstract
 
 	        $html = '<br/>' . __('Estimated total amount of Gulden: ', 'nocks-checkout-for-woocommerce') . '<i class="guldensign"></i>'.($amount).'';
         } catch(Exception $e) {
-            $exception = json_decode($e->getMessage());
             $html = '<br/>' . __('We cannot calculate the amount of Guldens at this moment.', 'nocks-checkout-for-woocommerce');
         }
 

@@ -4,6 +4,27 @@ msgstr "Gulden"
 msgid "Pay with Gulden"
 msgstr "Betaal met Gulden"
 
+msgid "iDEAL"
+msgstr "iDEAL"
+
+msgid "Pay with iDEAL"
+msgstr "Betaal met iDEAL"
+
+msgid "Select your bank"
+msgstr "Selecteer je bank"
+
+msgid "SEPA"
+msgstr "SEPA"
+
+msgid "Pay with SEPA"
+msgstr "Betaal met SEPA"
+
+msgid "Nocks Balance"
+msgstr "Nocks Balance"
+
+msgid "Pay with Nocks Balance"
+msgstr "Betaal met Nocks Balance"
+
 msgid "Estimated total amount of Gulden: "
 msgstr "Geschatte Gulden bedrag: "
 

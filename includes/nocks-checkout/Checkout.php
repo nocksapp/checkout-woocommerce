@@ -115,19 +115,25 @@ class Nocks_Checkout
 
         $post = array(
             "merchant_profile" => $this->merchant_profile,
-            "source_currency"  => "NLG",
             "amount"           => array(
                 "amount"   => (string)($currency==="NLG"?$this->round_up($amount, 8):$this->round_up($amount,2)),
                 "currency" => $currency
             ),
             "payment_method"   => array(
-                "method" => "gulden",
+                "method" => $data['method'],
+	            "metadata" => [
+	            	"issuer" => $data['issuer'],
+	            ]
             ),
             "metadata"         => array(),
             "redirect_url"     => $return_url,
             "callback_url"     => $callback_url,
-            "locale"           => "nl_NL"
+            "locale"           => Nocks_WC_Plugin::getDataHelper()->getCurrentLocale(),
         );
+
+        if ($data['source_currency']) {
+        	$post['source_currency'] = $data['source_currency'];
+        }
 
         $response = ($this->client->post('transaction', null, $post));
         $transaction = json_decode($response, true);
@@ -176,4 +182,35 @@ class Nocks_Checkout
         }
     }
 
+	/**
+	 * Get the ideal issuers
+	 *
+	 * @return array
+	 */
+    public function getIdealIssuers() {
+	    $transient_id = Nocks_WC_Plugin::getDataHelper()->getTransientId('issuers_' . ( $this->testMode ? 'test' : 'live' ));
+	    $cached_issuers = unserialize(get_transient($transient_id));
+
+	    if (is_array($cached_issuers)) {
+	    	return $cached_issuers;
+	    }
+
+	    try {
+		    // Get fresh issuers
+		    $response = ($this->client->get('settings', null));
+		    $settings = json_decode($response, true);
+		    $issuers = $settings['payment_methods']['ideal']['metadata']['issuers'];
+
+		    try {
+			    // Cache for a day
+			    set_transient($transient_id, serialize($issuers), MINUTE_IN_SECONDS * 60 * 24);
+		    } catch (Exception $e) {
+			    Nocks_WC_Plugin::debug(__FUNCTION__ . ': Issuer caching failed.');
+		    }
+
+		    return $issuers;
+	    } catch (Exception $e) {
+	    	return [];
+	    }
+    }
 }

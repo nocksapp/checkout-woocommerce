@@ -449,7 +449,7 @@ class Nocks_WC_Helper_Data
      *
      * @return string
      */
-    protected function getCurrentLocale() {
+    public function getCurrentLocale() {
         return apply_filters('wpml_current_language', get_locale());
     }
 
@@ -457,7 +457,7 @@ class Nocks_WC_Helper_Data
      * @param string $transient
      * @return string
      */
-    protected function getTransientId($transient) {
+    public function getTransientId($transient) {
         global $wp_version;
 
         /*
