@@ -85,17 +85,6 @@ class Nocks_Checkout
         $this->client->versionHeaders[] = $string;
     }
 
-//    public function getCurrentRate($currencyCode) {
-//        $rate = 0;
-//        $response = $this->client->get('http://api.nocks.com/api/market?call=nlg');
-//        $response = json_decode($response, true);
-//        if (isset($response['last'])) {
-//            $rate = number_format($response['last'], 8);
-//        }
-//
-//        return str_replace(',', '', $rate);
-//    }
-
     public function round_up ( $value, $precision ) {
         $pow = pow ( 10, $precision );
         return ( ceil ( $pow * $value ) + ceil ( $pow * $value - ceil ( $pow * $value ) ) ) / $pow;
@@ -114,21 +103,25 @@ class Nocks_Checkout
         $return_url = $data['redirectUrl'];
 
         $post = array(
-            "merchant_profile" => $this->merchant_profile,
-            "amount"           => array(
-                "amount"   => (string)($currency==="NLG"?$this->round_up($amount, 8):$this->round_up($amount,2)),
-                "currency" => $currency
+            'merchant_profile' => $this->merchant_profile,
+            'amount'           => array(
+                'amount'   => (string)($currency==="NLG"?$this->round_up($amount, 8):$this->round_up($amount,2)),
+                'currency' => $currency
             ),
-            "payment_method"   => array(
-                "method" => $data['method'],
-	            "metadata" => [
-	            	"issuer" => $data['issuer'],
+            'payment_method'   => array(
+                'method' => $data['method'],
+	            'metadata' => [
+	            	'issuer' => $data['issuer'],
 	            ]
             ),
-            "metadata"         => array(),
-            "redirect_url"     => $return_url,
-            "callback_url"     => $callback_url,
-            "locale"           => Nocks_WC_Plugin::getDataHelper()->getCurrentLocale(),
+            'metadata'         => [
+	            'nocks_plugin' => 'woocommerce:' . Nocks_WC_Plugin::PLUGIN_VERSION,
+	            'woocommerce_version'  => WC_VERSION,
+            ],
+            'redirect_url'     => $return_url,
+            'callback_url'     => $callback_url,
+            'locale'           => Nocks_WC_Plugin::getDataHelper()->getCurrentLocale(),
+            'description'      => $data['reference'] . ' - ' . get_bloginfo('name'),
         );
 
         if ($data['source_currency']) {

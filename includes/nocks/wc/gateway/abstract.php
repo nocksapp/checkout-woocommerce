@@ -240,8 +240,7 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
     {
         $order = Nocks_WC_Plugin::getDataHelper()->getWcOrder($order_id);
 
-        if (!$order)
-        {
+        if (!$order) {
             Nocks_WC_Plugin::debug($this->id . ': Could not process payment, order ' . $order_id . ' not found.');
 
             Nocks_WC_Plugin::addNotice(sprintf(__('Could not load order %s', 'nocks-checkout-for-woocommerce'), $order_id), 'error');
@@ -257,23 +256,13 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
         // Overwrite gateway-wide
         $initial_order_status = apply_filters(Nocks_WC_Plugin::PLUGIN_ID . '_initial_order_status_' . $this->id, $initial_order_status);
 
-        $settings_helper     = Nocks_WC_Plugin::getSettingsHelper();
-
-        // Is test mode enabled?
         $paymentRequestData = $this->getPaymentRequestData($order);
 
         $data = array_filter($paymentRequestData);
-
         $data = apply_filters('woocommerce_' . $this->id . '_args', $data, $order);
 
-        try
-        {
-	        if ( version_compare( WC_VERSION, '3.0', '<' ) ) {
-		        Nocks_WC_Plugin::debug( $this->id . ': Create payment for order ' . $order->id, true );
-	        } else {
-		        Nocks_WC_Plugin::debug( $this->id . ': Create payment for order ' . $order->get_id(), true );
-	        }
-
+        try {
+	        Nocks_WC_Plugin::debug( $this->id . ': Create payment for order ' . $data['reference'], true );
             do_action(Nocks_WC_Plugin::PLUGIN_ID . '_create_payment', $data, $order);
 
 	        $transaction = Nocks_WC_Plugin::getApiHelper()->getApiClient()->createTransaction($data);
@@ -293,14 +282,9 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
             $this->saveNocksInfo($order, $payment_id);
 
             do_action(Nocks_WC_Plugin::PLUGIN_ID . '_payment_created', $payment_id, $order);
+	        Nocks_WC_Plugin::debug( $this->id . ': Payment ' . $payment_id . ' created for order ' . $data['reference'] );
 
-	        if ( version_compare( WC_VERSION, '3.0', '<' ) ) {
-		        Nocks_WC_Plugin::debug( $this->id . ': Payment ' . $payment_id . ' created for order ' . $order->id );
-	        } else {
-		        Nocks_WC_Plugin::debug( $this->id . ': Payment ' . $payment_id . ' created for order ' . $order->get_id() );
-	        }
-
-            $order->add_order_note(sprintf(
+	        $order->add_order_note(sprintf(
             /* translators: Placeholder 1: Payment method title, placeholder 2: payment ID */
                 __('%s payment started (%s).', 'nocks-checkout-for-woocommerce'),
                 $this->method_title,
@@ -312,19 +296,11 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
                 'redirect' => $transaction['data']['payments']['data'][0]['metadata']['url'],
             );
         }
-        catch (Nocks_Exception $e)
-        {
-	        if ( version_compare( WC_VERSION, '3.0', '<' ) ) {
-		        Nocks_WC_Plugin::debug( $this->id . ': Failed to create payment for order ' . $order->id . ': ' . $e->getMessage() );
-	        } else {
-		        Nocks_WC_Plugin::debug( $this->id . ': Failed to create payment for order ' . $order->get_id() . ': ' . $e->getMessage() );
-	        }
-
-            /* translators: Placeholder 1: Payment method title */
+        catch (Nocks_Exception $e) {
+	        Nocks_WC_Plugin::debug( $this->id . ': Failed to create payment for order ' . $data['reference'] . ': ' . $e->getMessage() );
             $message = sprintf(__('Could not create %s payment.', 'nocks-checkout-for-woocommerce'), $this->title);
 
-            if (defined('WP_DEBUG') && WP_DEBUG)
-            {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
                 $message .= ' ' . $e->getMessage();
             }
 
@@ -357,36 +333,18 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
      */
     protected function getPaymentRequestData($order)
     {
-        $settings_helper     = Nocks_WC_Plugin::getSettingsHelper();
-        $payment_description = $settings_helper->getPaymentDescription();
-        $nocks_method       = $this->getNocksMethodId();
-        $source_currency    = $this->getSourceCurrency();
-        $selected_issuer     = $this->getSelectedIssuer();
-        $return_url          = $this->getReturnUrl($order);
-        $webhook_url         = $this->getWebhookUrl($order);
-
-	    if ( version_compare( WC_VERSION, '3.0', '<' ) ) {
-		    $payment_description = strtr($payment_description, array(
-			    '{order_number}' => $order->get_order_number(),
-			    '{order_date}'   => date_i18n(wc_date_format(), strtotime($order->order_date)),
-		    ));
-	    } else {
-		    $payment_description = strtr($payment_description, array(
-			    '{order_number}' => $order->get_order_number(),
-			    '{order_date}'   => date_i18n(wc_date_format(), $order->get_date_created()->getTimestamp()),
-		    ));
-	    }
+    	$data = [
+    		'amount' => $order->get_total(),
+		    'currency' => get_woocommerce_currency(),
+		    'method' => $this->getNocksMethodId(),
+		    'source_currency' => $this->getSourceCurrency(),
+		    'issuer' => $this->getSelectedIssuer(),
+		    'redirectUrl' => $this->getReturnUrl($order),
+		    'webhookUrl' => $this->getWebhookUrl($order),
+	    ];
 
 	    if ( version_compare( WC_VERSION, '3.0', '<' ) ) {
 		    $paymentRequestData = array(
-			    'amount'          => $order->get_total(),
-                'currency'        => get_woocommerce_currency(),
-			    'description'     => $payment_description,
-			    'redirectUrl'     => $return_url,
-			    'webhookUrl'      => $webhook_url,
-			    'method'          => $nocks_method,
-			    'source_currency' => $source_currency,
-			    'issuer'          => $selected_issuer,
 			    'billingAddress'  => $order->billing_address_1,
 			    'billingCity'     => $order->billing_city,
 			    'billingRegion'   => $order->billing_state,
@@ -397,20 +355,10 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 			    'shippingRegion'  => $order->shipping_state,
 			    'shippingPostal'  => $order->shipping_postcode,
 			    'shippingCountry' => $order->shipping_country,
-			    'metadata'        => array(
-				    'order_id' => $order->id,
-			    ),
+			    'reference'       => $order->id,
 		    );
 	    } else {
 		    $paymentRequestData = array(
-			    'amount'          => $order->get_total(),
-			    'currency'        => get_woocommerce_currency(),
-			    'description'     => $payment_description,
-			    'redirectUrl'     => $return_url,
-			    'webhookUrl'      => $webhook_url,
-			    'method'          => $nocks_method,
-			    'source_currency' => $source_currency,
-			    'issuer'          => $selected_issuer,
 			    'billingAddress'  => $order->get_billing_address_1(),
 			    'billingCity'     => $order->get_billing_city(),
 			    'billingRegion'   => $order->get_billing_state(),
@@ -421,15 +369,11 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 			    'shippingRegion'  => $order->get_shipping_state(),
 			    'shippingPostal'  => $order->get_shipping_postcode(),
 			    'shippingCountry' => $order->get_shipping_country(),
-			    'metadata'        => array(
-				    'order_id' => $order->get_id(),
-			    ),
+			    'reference'       => $order->get_id(),
 		    );
 	    }
 
-
-        return $paymentRequestData;
-
+        return array_merge($data, $paymentRequestData);
     }
 
     /**

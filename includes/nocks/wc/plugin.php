@@ -6,7 +6,7 @@ class Nocks_WC_Plugin
 {
     const PLUGIN_ID      = 'nocks-checkout-for-woocommerce';
     const PLUGIN_TITLE   = 'Nocks Checkout for WooCommerce';
-    const PLUGIN_VERSION = '0.12.0';
+    const PLUGIN_VERSION = '0.16.0';
 
     const DB_VERSION     = '1.0';
     const DB_VERSION_PARAM_NAME = 'nocks-db-version';
