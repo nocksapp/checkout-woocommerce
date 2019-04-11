@@ -34,15 +34,6 @@ class Nocks_WC_Helper_Settings
     }
 
     /**
-     * Description send to Nocks
-     *
-     * @return string|null
-     */
-    public function getPaymentDescription() {
-        return trim(get_option($this->getSettingId('payment_description')));
-    }
-
-    /**
      * Get current locale
      *
      * @return string
@@ -99,11 +90,6 @@ class Nocks_WC_Helper_Settings
      */
     public function addGlobalSettingsFields(array $settings) {
         $content = '' . $this->getPluginStatus() . $this->getNocksMethods();
-
-        /* translators: Default payment description. {order_number} and {order_date} are available tags. */
-        $default_payment_description = __('Order {order_number}', 'nocks-checkout-for-woocommerce');
-        $payment_description_tags = '<code>{order_number}</code>, <code>{order_date}</code>';
-
         $debug_desc = __('Log plugin events.', 'nocks-checkout-for-woocommerce');
 
         // For WooCommerce 2.2.0+ display view logs link
@@ -117,9 +103,6 @@ class Nocks_WC_Helper_Settings
         }
 
         $settings_helper = Nocks_WC_Plugin::getSettingsHelper();
-//
-//        var_dump($_POST);
-//        die(var_dump($settings));
 
         // Global Nocks settings
         $nocks_settings = array(
@@ -154,15 +137,6 @@ class Nocks_WC_Helper_Settings
                 'options' => $settings_helper->getNocksMerchants(isset($_POST['nocks-checkout-for-woocommerce_live_api_key']) ? $_POST['nocks-checkout-for-woocommerce_live_api_key'] : null, $_SERVER['REQUEST_METHOD'] === 'POST' ? isset($_POST['nocks-checkout-for-woocommerce_test_mode_enabled']) : null),
             ),
             array(
-                'id'      => $this->getSettingId('payment_description'),
-                'title'   => __('Description', 'nocks-checkout-for-woocommerce'),
-                'type'    => 'text',
-                /* translators: Placeholder 1: Default payment description, placeholder 2: list of available tags */
-                'desc'    => sprintf(__('Payment description send to Nocks. Default <code>%s</code><br/>You can use the following tags: %s', 'nocks-checkout-for-woocommerce'), $default_payment_description, $payment_description_tags),
-                'default' => $default_payment_description,
-                'css'     => 'width: 350px',
-            ),
-            array(
                 'id'      => $this->getSettingId('debug'),
                 'title'   => __('Debug Log', 'nocks-checkout-for-woocommerce'),
                 'type'    => 'checkbox',
@@ -189,7 +163,6 @@ class Nocks_WC_Helper_Settings
         else {
             $date->setTimestamp($time);
         }
-
 
         return $date->getTimestamp();
     }
