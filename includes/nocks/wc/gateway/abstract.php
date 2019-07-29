@@ -137,7 +137,7 @@ abstract class Nocks_WC_Gateway_Abstract extends WC_Payment_Gateway
 
     protected function _initDescription ()
     {
-        $this->description = $this->getDefaultDescription();
+	    $this->description = $this->get_option('description', $this->getDefaultDescription());
     }
 
     protected function _initMinMaxAmount ()
