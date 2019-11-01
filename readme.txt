@@ -1,7 +1,7 @@
 === Nocks Checkout for WooCommerce ===
 Contributors: nocksapp
 Donate link: https://nocks.com/
-Tags: woocommerce, gulden, psp, payment gateway, nocks, ideal
+Tags: woocommerce, bitcoin, litecoin, ethereum, gulden, psp, payment gateway, nocks, ideal
 Requires at least: 4.0
 Tested up to: 4.8.2
 Stable tag: 4.4.2
