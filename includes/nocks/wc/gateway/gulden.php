@@ -43,19 +43,16 @@ class Nocks_WC_Gateway_Gulden extends Nocks_WC_Gateway_Abstract
      * Display fields below payment method in checkout
      */
     public function payment_fields() {
-        // Display description above issuers
-        // wp_enqueue_style( 'nocks_checkout_add_currency_css_nlg', plugins_url('assets/guldensign/guldensign.css', dirname(__FILE__)));
-
         parent::payment_fields();
         try {
         	$currency = get_woocommerce_currency();
         	$amount = WC()->cart->total;
-        	if ($currency !== 'NLG') {
-		        $priceData = Nocks_WC_Plugin::getApiHelper()->getApiClient()->calculatePrice( get_woocommerce_currency(), WC()->cart->total, "NLG" );
+        	if ($currency !== $this->getSourceCurrency()) {
+		        $priceData = Nocks_WC_Plugin::getApiHelper()->getApiClient()->calculatePrice( get_woocommerce_currency(), WC()->cart->total, $this->getSourceCurrency(), $this->getNocksMethodId());
 		        $amount    = $priceData['source_amount']['amount'];
 	        }
 
-	        $html = '<br/>' . __('Estimated total amount of Gulden: ', 'nocks-checkout-for-woocommerce') . '<i class="guldensign"></i>'.($amount).'';
+	        $html = '<br/>' . __('Estimated total amount of Gulden: ', 'nocks-checkout-for-woocommerce') . ' ' . $this->getSourceCurrency() . ' ' . $amount;
         } catch(Exception $e) {
             $html = '<br/>' . __('We cannot calculate the amount of Guldens at this moment.', 'nocks-checkout-for-woocommerce');
         }

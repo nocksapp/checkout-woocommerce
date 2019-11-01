@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nocks Checkout for WooCommerce
  * Description: Accept payments in WooCommerce with the official Nocks Checkout plugin
- * Version: 0.17
+ * Version: 0.18
  * Author: Nocks
  * Author URI: https://www.nocks.com
  * Requires at least: 3.8

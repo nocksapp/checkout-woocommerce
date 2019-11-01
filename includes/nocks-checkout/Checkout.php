@@ -149,7 +149,7 @@ class Nocks_Checkout
      * @param $source_currency
      * @return int
      */
-    public function calculatePrice($target_currency, $amount, $source_currency) {
+    public function calculatePrice($target_currency, $amount, $source_currency, $method) {
         $data = array(
             'source_currency'  => $source_currency,
             'target_currency'  => $target_currency,
@@ -158,7 +158,7 @@ class Nocks_Checkout
                 "amount"   => (string)$amount,
                 "currency" => $target_currency
             ),
-            'payment_method'   => array("method" => "gulden")
+            'payment_method'   => array("method" => $method)
         );
 
         try {

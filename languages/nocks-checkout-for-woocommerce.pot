@@ -25,10 +25,46 @@ msgstr ""
 msgid "Pay with Nocks Balance"
 msgstr ""
 
+msgid "Bitcoin"
+msgstr ""
+
+msgid "Pay with Bitcoin"
+msgstr ""
+
+msgid "Litecoin"
+msgstr ""
+
+msgid "Pay with Litecoin"
+msgstr ""
+
+msgid "Ethereum"
+msgstr ""
+
+msgid "Pay with Ethereum"
+msgstr ""
+
 msgid "Estimated total amount of Gulden: "
 msgstr ""
 
 msgid "We cannot calculate the amount of Guldens at this moment."
+msgstr ""
+
+msgid "Estimated total amount of Bitcoin: "
+msgstr ""
+
+msgid "We cannot calculate the amount of Bitcoins at this moment."
+msgstr ""
+
+msgid "Estimated total amount of Litecoin: "
+msgstr ""
+
+msgid "We cannot calculate the amount of Litecoins at this moment."
+msgstr ""
+
+msgid "Estimated total amount of Ethereum: "
+msgstr ""
+
+msgid "We cannot calculate the amount of Ethereums at this moment."
 msgstr ""
 
 msgid "Your payment has been cancelled."
