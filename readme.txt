@@ -14,7 +14,7 @@ Accept Nocks payment methods in your store.
 
 Accept Nocks payment methods in your store.
 
-Adds the feature to accept Gulden, iDEAL, SEPA and/or Nocks Balance payments in your WooCommerce webshop. A list of features:
+Adds the feature to accept Bitcoin, Litecoin, Ethereum, Gulden, iDEAL, SEPA and/or Nocks Balance payments in your WooCommerce webshop. A list of features:
 
 * Set a price in EUR or NLG and let your users pay the live exchange rate in Gulden
 * Fill out your Nocks.com API key, select your prefered merchant account and you’re good to go
