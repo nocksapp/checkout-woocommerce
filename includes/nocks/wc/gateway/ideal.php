@@ -56,6 +56,22 @@ class Nocks_WC_Gateway_Ideal extends Nocks_WC_Gateway_Abstract
 	}
 
 	/**
+	 * Validate frontend fields.
+	 *
+	 * Validate payment fields on the frontend.
+	 *
+	 * @return bool
+	 */
+	public function validate_fields() {
+		if (!$this->getSelectedIssuer()) {
+			wc_add_notice(__('Please select your bank', 'nocks-checkout-for-woocommerce'), 'error');
+			return false;
+		}
+
+		return parent::validate_fields();
+	}
+
+	/**
 	 * Display fields below payment method in checkout
 	 */
 	public function payment_fields()

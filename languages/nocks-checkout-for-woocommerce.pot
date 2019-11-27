@@ -13,6 +13,9 @@ msgstr ""
 msgid "Select your bank"
 msgstr ""
 
+msgid "Please select your bank"
+msgstr ""
+
 msgid "SEPA"
 msgstr ""
 

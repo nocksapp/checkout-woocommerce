@@ -13,6 +13,9 @@ msgstr "Pay with iDEAL"
 msgid "Select your bank"
 msgstr "Select your bank"
 
+msgid "Please select your bank"
+msgstr "Please select your bank"
+
 msgid "SEPA"
 msgstr "SEPA"
 
